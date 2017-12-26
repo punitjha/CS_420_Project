@@ -15,6 +15,8 @@
 #include <armadillo>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
+
 //*****************************************
 
 
@@ -28,7 +30,7 @@
 
 
 //*********************************************
-// Creation and Initialization functions
+//Matrix Creation and Initialization functions
 //*********************************************
 
 void mat_create(double **&mat, int row, int col)
@@ -228,6 +230,16 @@ void diag(double **mat, double *array, int len, double factor, int diag)
 	}
 }
 		
+void transpose_sq(double **mmat2 ,double **mmat1, int rows, int cols)
+{
+	for(int i=0; i<rows; i++)
+	{
+		for(int j=0; j<cols; j++)
+		{
+			mmat2[i][j]=mmat1[j][i];
+		}
+	}
+}
 
 
 //This is to test that the LU decomposition functions from serial
@@ -368,14 +380,48 @@ int main (int argc, char** argv)
 		for(int i=0; i<sizeof(hpb)/sizeof(hpb[0]); i++)
 		{
 			m1[(int)hpb[i]-(nx-1)][(int)hpb[i]]=-1*lmbda_x/2.0;
-			m1[(int)vpb[i]][(int)(vpb[i]-(ny-1))]=1*lmbda_x/2.0;
+			m1[(int)vpb[i]][(int)vpb[i]-(ny-1)]=1*lmbda_x/2.0;
 		}
 
 
-		mat_print(m1,nx*ny,nx*ny);	
+		//mat_print(m1,nx*ny,nx*ny);	
 		//assign the vertical periodic boudary conditions
 		
+		double *lmbda_v;
+		array_create(lmbda_v,ny);
+		array_init(lmbda_v,ny);
+		array_add_subs(lmbda_v,ny,lmbda_y/2.0);	
+		//array_print(lmbda_v,ny);
 
+		diag(m1,lmbda_v,ny,-1.0,nx*(ny-1));
+		diag(m1,lmbda_v,ny,1.0,-(nx*(ny-1)));
+		
+		//mat_print(m1,nx*ny,nx*ny);	
+
+		double **m2;
+		mat_create(m2,nx*ny,nx*ny);
+		mat_init(m2,nx*ny,nx*ny);
+		transpose_sq(m2,m1,nx*ny,nx*ny);
+
+		mat_print(m2,nx*ny,nx*ny);	
+
+//we have to code our LU decomposition here
+
+		
+	//Using the GNU standard library for solving the linear equation	
+		gsl_matrix *mm1=gsl_matrix_alloc(nx*ny,nx*ny);
+		gsl_matrix *mm2=gsl_matrix_alloc(nx*ny,nx*ny);
+
+		for(int i=0; i<nx*ny; i++)
+		{
+			for (int j=0; j<nx*ny; j++)
+			{
+				gsl_matrix_set(mm1,i,j,m1[i][j]);
+			}
+		}
+		
+
+		//gsl_matrix_view m22= gsl_matrix_view_array( **m2, nx*ny,nx*ny);
 
 	return 0;	
 
