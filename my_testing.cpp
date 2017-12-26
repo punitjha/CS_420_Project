@@ -71,7 +71,7 @@ void mat_print(double **mat, int rows, int cols)
 	{
 		for (int j=0; j<cols; j++)
 		{
-			printf( "%7.3f \t ",mat[i][j]);
+			printf( "%7.3f   ",mat[i][j]);
 		}
 	printf("\n");
 	}
@@ -80,7 +80,28 @@ void array_print(double *array, int len)
 {
 	for (int i=0; i<len; i++)
 	{
-		printf("%2.3f \t", array[i]);
+		printf("%2.3f   ", array[i]);
+	}
+}
+void print_gsl_mat(double *m, int rows, int cols)
+{
+	for (int i=0; i<rows; i++)
+	{
+		for(int j=0; j<cols; j++)
+		{
+			printf("%7.3f    ",m[j+cols*i]);
+		}
+	printf("\n");
+	}
+}
+void copy_gsl_mat(double **cmat, double *gmat, int rows, int cols)
+{
+	for (int i=0; i<rows; i++)
+	{
+		for(int j=0; j<cols; j++)
+		{
+			printf(gmat[j+cols*i]=cmat[i][j]);
+		}
 	}
 }
 
@@ -383,7 +404,7 @@ int main (int argc, char** argv)
 			m1[(int)vpb[i]][(int)vpb[i]-(ny-1)]=1*lmbda_x/2.0;
 		}
 
-
+//THERE IS A PROBLEM WITH THE M1 MATRIX WHICH HAS TO BE LOOKED INTO***********
 		//mat_print(m1,nx*ny,nx*ny);	
 		//assign the vertical periodic boudary conditions
 		
@@ -403,7 +424,7 @@ int main (int argc, char** argv)
 		mat_init(m2,nx*ny,nx*ny);
 		transpose_sq(m2,m1,nx*ny,nx*ny);
 
-		mat_print(m2,nx*ny,nx*ny);	
+		//mat_print(m2,nx*ny,nx*ny);	
 
 //we have to code our LU decomposition here
 
@@ -411,6 +432,7 @@ int main (int argc, char** argv)
 	//Using the GNU standard library for solving the linear equation	
 		gsl_matrix *mm1=gsl_matrix_alloc(nx*ny,nx*ny);
 		gsl_matrix *mm2=gsl_matrix_alloc(nx*ny,nx*ny);
+		gsl_matrix *uu1=gsl_matrix_alloc(nx,ny);
 
 		for(int i=0; i<nx*ny; i++)
 		{
@@ -420,9 +442,12 @@ int main (int argc, char** argv)
 			}
 		}
 		
-
-		//gsl_matrix_view m22= gsl_matrix_view_array( **m2, nx*ny,nx*ny);
-
+		//print_gsl_mat(gsl_matrix_ptr(mm1,0,0), nx*ny, nx*ny);
+	        gsl_matrix_transpose_memcpy(mm2,mm1);
+		//print_gsl_mat(gsl_matrix_ptr(mm2,0,0), nx*ny, nx*ny);
+		//gsl_matrix_fprintf(stdout,mm2,"%7.3f");	
+		gsl_vector *u_vec=gsl_vector_alloc (nx*ny);
+		u_vec=gsl_matrix_subcolumn(u,0,0,nx*ny);
 	return 0;	
 
 
