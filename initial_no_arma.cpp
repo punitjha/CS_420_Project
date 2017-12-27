@@ -18,9 +18,93 @@
 #include <omp.h>
 
 #include "papi_support.h"
+
+
 //*****************************************
 double A[N][M];
 
+// Initialize array to zeros.
+void reset_array()
+{
+  for (int i = 0; i < N; i++)
+    for (int j = 0; j < M; j++)
+    {
+        A[i][j] = 0.0;
+    }
+}
+
+
+void mat_create(double **mat, int row, int col)
+{
+	 mat=new double*[row];
+	for (int i=0; i<row; i++)
+	{
+		mat[i]=new double[col];
+	}
+}
+
+void array_create(double *array, int len)
+{
+	array = new double [len];
+}
+
+
+void init_cond(double **mat1,double **mat2, double **mat3, int row, int col)
+{
+	//this function return the initial position
+	for(int i=0; i<row; i++)
+	{
+		for(int j=0; j<col; j++)
+		{
+			mat3[i][j]=exp(-10.0*(pow(mat1[i][j],2) + pow(mat2[i][j],2)));
+		}
+	}
+	 //u=exp(-10.0*(pow(x,2.0) + pow(y,2.0)));
+}
+
+//works for square matrices only
+void mat_mul(double **A, double **B, double **C, int row, int col)
+{ 
+    int i, j, k;
+    for (i = 0; i < row; ++i) 
+    {
+        for (j = 0; j < col; ++j) 
+	{
+            C[i][j] = 0;
+            for (k = 0; k < row; ++k) 
+	    {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+}
+
+void linspace(double *array, double a, double b, int n)
+{
+	double step=(a-b)/(n-1);
+	int i=0;
+	while(a<=b)
+	{
+		array[i]=a+step;
+		i++;
+		a+=step;
+	}
+}
+
+void transpose(double **mat, int row, int col)
+{
+	for(int i=0; i<row; i++)
+	{
+		for (int 
+
+
+ void meshgrid(double *x_lin, double *y_lin, double **xhalf, double **yhalf)
+{
+	//this function creates the mesh
+
+	xhalf.each_row() +=x_lin.t();
+	yhalf.each_col() +=y_lin;
+}
 
 
 
@@ -32,40 +116,9 @@ double A[N][M];
 
 
 
+
+
 //*********************************************
-
-void init_cond(arma::mat &x,arma::mat &y, arma::mat &u)
-{
-	//this function return the initial position
-	 u=exp(-10.0*(pow(x,2.0) + pow(y,2.0)));
-}
-
- void meshgrid(arma::vec &x_lin, arma::vec &y_lin,arma::mat &xhalf, arma::mat &yhalf)
-{
-	//this function creates the mesh
-	xhalf.each_row() +=x_lin.t();
-	yhalf.each_col() +=y_lin;
-}
-
-void arange(arma::vec &x,int ini, int fin, int steps)
-{
-	//figure out the number of elments
-	int counter=0;
-	for (int i=ini; i<fin; i+=steps)
-	{
-		counter++;
-	}
-	int k=0;
-	x=arma::zeros(counter);
-	//initialize the vector and assign the values
-	for(int j=ini; j<fin; j+=steps)
-	{
-		x(k)=j;
-		k++;
-	}	
-
-}
-
 void linspace()
 {
 
@@ -74,8 +127,6 @@ void linspace()
 
 
 
-
-//*********************************************
 
 //This is to test that the LU decomposition functions from serial
 //parallel and MPI are the same
@@ -95,6 +146,8 @@ void unit_test()
   printf("GOOD -- Test passed.\n");
 }
 
+
+//************************************
 int main (int argc, char** argv)
 {
 #ifdef USE_MPI
@@ -131,7 +184,7 @@ int main (int argc, char** argv)
   double dy=dx;
 
   //declaring the mesh grid points
-
+   
   
 
 
