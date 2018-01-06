@@ -23,7 +23,8 @@
 #include <papi.h>
 #endif
 
-void output_h5();
+void output_h5(int nx, int ny, gsl_matrix* sol);
+void init_h5(double *& lin_x, double *& lin_y, int nx, int ny);
 //*****************************************
 
 
@@ -387,10 +388,21 @@ int main (int argc, char** argv)
 	
 	double *x_lin, *y_lin;
 	linspace(x_lin,-1.0,1.0-dx,nx);	
-	linspace(y_lin,-1.0,1.0-dx,nx);	
+	linspace(y_lin,-1.0,1.0-dx,nx);
+	
 	meshgrid(x_lin,y_lin,xhalf,yhalf,nx);
 //	mat_print(xhalf,nx,nx);
 //	mat_print(yhalf,nx,nx);	
+
+	// create h5 file and output coordinates to h5 file	
+	double *x_coord, *y_coord;
+	array_create(x_coord, nx);
+	array_create(y_coord, ny);
+	for (int i=0; i<nx; i++) {
+	  x_coord[i] = x_lin[i] + dx/2.0;
+	  y_coord[i] = y_lin[i] + dy/2.0;
+	}
+	init_h5(x_coord, y_coord, nx, ny);
 
 	double **x, **y;
 	mat_create(x,nx,ny);
@@ -530,6 +542,7 @@ int main (int argc, char** argv)
 	gsl_matrix_transpose_memcpy(mm2,mm1);
 
 	gsl_vector *u_vec=gsl_vector_alloc(nx*ny);
+
 	//printf("\n Here1 \n");
 	for(int i=0; i<10; i++)
 	{
@@ -554,14 +567,14 @@ int main (int argc, char** argv)
 		//printf("\n Here7 \n");
 		gsl_matrix_view sol1=gsl_matrix_view_vector(sol,nx,ny);
 		//printf("\n Here8 \n");
-		print_gsl_mat(gsl_matrix_ptr(&sol1.matrix,0,0),nx,ny);
-		printf(" \n \n \n");
+		//		print_gsl_mat(gsl_matrix_ptr(&sol1.matrix,0,0),nx,ny);
+		//		printf(" \n \n \n");
 		//printf("\n Here9 \n");
 		gsl_matrix_memcpy(uu1,&sol1.matrix);
 		//printf("\n Here10 \n");
 	}
-
-	output_h5();
+	print_gsl_mat(gsl_matrix_ptr(uu1,0,0),nx,ny);
+	output_h5(nx,ny,uu1);
 //**************
 //PAPI
 //**************
