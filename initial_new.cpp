@@ -286,7 +286,7 @@ void transpose_sq(double **mmat2 ,double **mmat1, int rows, int cols)
 		}
 	}
 }
-void faltten_gsl(double *mat, double *vect, int rows, int cols, int len)
+void flatten_gsl(double *mat, double *vect, int rows, int cols, int len)
 {
 	int k=0;
 	for (int i=0; i<rows; i++)
@@ -368,7 +368,6 @@ int main (int argc, char** argv)
 	}
 #endif
 //************************************
-	output_h5();
 	int nx;
 	printf("\n Enter nx \n");
 	scanf("%d",&nx);
@@ -521,7 +520,6 @@ int main (int argc, char** argv)
 //we have to code our LU decomposition here*
 //******************************************
 
-		
 	//Using the GNU standard library for solving the linear equation	
 	gsl_matrix *mm1=gsl_matrix_alloc(nx*ny,nx*ny);
 	gsl_matrix *mm2=gsl_matrix_alloc(nx*ny,nx*ny);
@@ -531,26 +529,36 @@ int main (int argc, char** argv)
 	copy_gsl_mat(u,gsl_matrix_ptr(uu1,0,0),nx,ny);
 	gsl_matrix_transpose_memcpy(mm2,mm1);
 
-	gsl_vector *u_vec=gsl_vector_alloc (nx*ny);
+	gsl_vector *u_vec=gsl_vector_alloc(nx*ny);
+	//printf("\n Here1 \n");
 	for(int i=0; i<10; i++)
 	{
 		//flatening starts here
-		faltten_gsl(gsl_matrix_ptr(uu1,0,0),gsl_vector_ptr(u_vec,0),nx,ny,nx*ny);	
+	        //printf("\n Here2 \n");
+		flatten_gsl(gsl_matrix_ptr(uu1,0,0),gsl_vector_ptr(u_vec,0),nx,ny,nx*ny);	
 		//the matrix vector multiplication implemtation.NOTICE NEW VEC USED
 		gsl_vector *u_vecc=gsl_vector_alloc (nx*ny);
-		faltten_gsl(gsl_matrix_ptr(uu1,0,0),gsl_vector_ptr(u_vecc,0),nx,ny,nx*ny);	
-		gsl_blas_dgemv(CblasNoTrans,1,mm2,u_vec,0,u_vecc);
+		flatten_gsl(gsl_matrix_ptr(uu1,0,0),gsl_vector_ptr(u_vecc,0),nx,ny,nx*ny);	
+		//printf("\n Here3 \n");
+		gsl_blas_dgemv(CblasNoTrans,1.0,mm2,u_vec,0.0,u_vecc);
 
 		//preparing for gsl LU  decompose
+		//printf("\n Here4 \n");
 		int s; // required signum
 		gsl_permutation *p=gsl_permutation_alloc(nx*ny);
+		//printf("\n Here5 \n");
 		gsl_linalg_LU_decomp (mm1,p,&s);
 		gsl_vector *sol=gsl_vector_alloc(nx*ny);
+		//printf("\n Here6 \n");
 		gsl_linalg_LU_solve (mm1,p,u_vecc,sol);
+		//printf("\n Here7 \n");
 		gsl_matrix_view sol1=gsl_matrix_view_vector(sol,nx,ny);
+		//printf("\n Here8 \n");
 		print_gsl_mat(gsl_matrix_ptr(&sol1.matrix,0,0),nx,ny);
 		printf(" \n \n \n");
+		//printf("\n Here9 \n");
 		gsl_matrix_memcpy(uu1,&sol1.matrix);
+		//printf("\n Here10 \n");
 	}
 
 	output_h5();
