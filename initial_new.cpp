@@ -17,11 +17,13 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
-
+#include <hdf5.h>
 
 #ifdef USE_PAPI
 #include <papi.h>
 #endif
+
+void output_h5();
 //*****************************************
 
 
@@ -366,7 +368,7 @@ int main (int argc, char** argv)
 	}
 #endif
 //************************************
-
+	output_h5();
 	int nx;
 	printf("\n Enter nx \n");
 	scanf("%d",&nx);
@@ -550,6 +552,8 @@ int main (int argc, char** argv)
 		printf(" \n \n \n");
 		gsl_matrix_memcpy(uu1,&sol1.matrix);
 	}
+
+	output_h5();
 //**************
 //PAPI
 //**************
