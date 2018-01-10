@@ -573,7 +573,6 @@ int main (int argc, char** argv)
 		gsl_matrix_memcpy(uu1,&sol1.matrix);
 		//printf("\n Here10 \n");
 		output_h5(nx,ny,uu1,dt*(double)(i+1));
-		std::cout << dt*(double)(i+1) << "\n";
 	}
 	print_gsl_mat(gsl_matrix_ptr(uu1,0,0),nx,ny);
 

@@ -3,19 +3,54 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
+#include <iomanip>
+#include <sstream>
+#include <iostream>
+using namespace std;
 #define FILE "out.h5"
 
 void output_h5(int nx, int ny, gsl_matrix* sol, double time) {
-  hid_t fid, gid;
+  hid_t fid, gid, dsetid, dspaid;
+  hsize_t dims[2];
   herr_t status;
   double ans[nx][ny];
-  char* time_str = (char*)(&time);
+  const char* time_ptr;
+  const char* dset_ptr;
+
+  stringstream time_stream;
+  time_stream << fixed << setprecision(5) << time;
+  string time_string = time_stream.str();
+  string title = "Time: ";
+  string unit = " [sec]";
+  string group_name;
+  string dataset_name = "u";
+
+  group_name.append(title);
+  group_name.append(time_string);
+  group_name.append(unit);
+
+  time_ptr = group_name.c_str();
+  dset_ptr = dataset_name.c_str();
+
+  dims[0] = nx;
+  dims[1] = ny;
 
   fid = H5Fopen(FILE, H5F_ACC_RDWR, H5P_DEFAULT);
-  gid = H5Gcreate(fid, time_str, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  gid = H5Gcreate(fid, time_ptr, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   
+  dspaid = H5Screate_simple(2, dims, NULL);  
+  dsetid = H5Dcreate(gid, dset_ptr, H5T_NATIVE_DOUBLE, dspaid, \
+		       H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-
+  for (int i = 0; i < nx; i++) {
+    for (int j = 0; j < ny; j++) {
+      ans[i][j] = gsl_matrix_get(sol,i,j);
+    }
+  }
+  status = H5Dwrite(dsetid, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, \
+		    H5P_DEFAULT, ans);
+  status = H5Dclose(dsetid);
+  status = H5Sclose(dspaid);
   status = H5Gclose(gid);
   status = H5Fclose(fid);
 }
