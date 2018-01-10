@@ -5,14 +5,18 @@
 #include <gsl/gsl_linalg.h>
 #define FILE "out.h5"
 
-void output_h5(int nx, int ny, gsl_matrix* sol) {
+void output_h5(int nx, int ny, gsl_matrix* sol, double time) {
   hid_t fid, gid;
   herr_t status;
+  double ans[nx][ny];
+  char* time_str = (char*)(&time);
 
   fid = H5Fopen(FILE, H5F_ACC_RDWR, H5P_DEFAULT);
-  //  gid = H5Gcreate(fid, "Coordinates", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  gid = H5Gcreate(fid, time_str, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
   
-  //  status = H5Gclose(gid);
+
+
+  status = H5Gclose(gid);
   status = H5Fclose(fid);
 }
 

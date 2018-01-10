@@ -23,7 +23,7 @@
 #include <papi.h>
 #endif
 
-void output_h5(int nx, int ny, gsl_matrix* sol);
+void output_h5(int nx, int ny, gsl_matrix* sol, double time);
 void init_h5(double *& lin_x, double *& lin_y, int nx, int ny);
 //*****************************************
 
@@ -572,9 +572,11 @@ int main (int argc, char** argv)
 		//printf("\n Here9 \n");
 		gsl_matrix_memcpy(uu1,&sol1.matrix);
 		//printf("\n Here10 \n");
+		output_h5(nx,ny,uu1,dt*(double)(i+1));
+		std::cout << dt*(double)(i+1) << "\n";
 	}
 	print_gsl_mat(gsl_matrix_ptr(uu1,0,0),nx,ny);
-	output_h5(nx,ny,uu1);
+
 //**************
 //PAPI
 //**************
