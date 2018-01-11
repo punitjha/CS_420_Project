@@ -396,12 +396,14 @@ int main (int argc, char** argv)
 
 	// create h5 file and output coordinates to h5 file	
 	double *x_coord, *y_coord;
-	array_create(x_coord, nx);
-	array_create(y_coord, ny);
+	array_create(x_coord, nx+1);
+	array_create(y_coord, ny+1);
 	for (int i=0; i<nx; i++) {
-	  x_coord[i] = x_lin[i] + dx/2.0;
-	  y_coord[i] = y_lin[i] + dy/2.0;
+	  x_coord[i] = x_lin[i];
+	  y_coord[i] = y_lin[i];
 	}
+	x_coord[nx] = 1.0;
+	y_coord[ny] = 1.0;
 	init_h5(x_coord, y_coord, nx, ny);
 
 	double **x, **y;
