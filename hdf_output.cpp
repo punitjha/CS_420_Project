@@ -60,6 +60,8 @@ void init_h5(double *& x_lin, double *& y_lin, int nx, int ny) {
   hid_t fid, gid, dsetid_x, dsetid_y, dsetid_z, dspaceid_x, dspaceid_y, dspaceid_z;
   hsize_t x_dims[1], y_dims[1], z_dims[1];
   herr_t status;
+  nx = nx + 1;
+  ny = ny + 1;
   double x[nx];
   double y[ny];
   double z[2];
