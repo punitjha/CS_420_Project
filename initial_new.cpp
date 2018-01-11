@@ -544,6 +544,8 @@ int main (int argc, char** argv)
 	gsl_vector *u_vec=gsl_vector_alloc(nx*ny);
 
 	//printf("\n Here1 \n");
+	output_h5(nx,ny,uu1,dt*(double)(0.0));
+
 	for(int i=0; i<10; i++)
 	{
 		//flatening starts here
