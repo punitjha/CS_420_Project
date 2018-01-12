@@ -3,7 +3,8 @@ SHELL=/bin/bash
 #To use this makefile type make -f Makefile.win
 # Matrix dimensions.
 
-CC=CC
+CC=h5c++
+# CC=CC
 
 # Compiler optimization level.
 OPT_LEVEL=-O3
@@ -35,7 +36,7 @@ COMMON_PROG_ARGS= $(OPT_LEVEL)
 cc_PROG_ARGS=$(COMMON_PROG_ARGS)
 
 # Compilation command for cc, no PAPI.
-#cc_NOPAPI_CC=$(CC) -DNOPAPI $(cc_PROG_ARGS)
+cc_NOPAPI_CC=$(CC) -DNOPAPI $(cc_PROG_ARGS)
 
 cc_PAPI_CC=$(CC) -I $(GSL_INCLUDE_PATH) -L $(GSL_LIBRARY_PATH) $(cc_PROG_ARGS)
 LIBS=-lgsl -lpapi -lgslcblas -lm 
