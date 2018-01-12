@@ -40,7 +40,7 @@ cc_NOPAPI_CC=$(CC) -DNOPAPI $(cc_PROG_ARGS)
 
 cc_PAPI_CC=$(CC) -I $(GSL_INCLUDE_PATH) -L $(GSL_LIBRARY_PATH) $(cc_PROG_ARGS)
 LIBS=-lgsl -lpapi -lgslcblas -lm 
-OBJ = initial_new.o hdf_output.o
+OBJ = main.o hdf_output.o matrix.o math.o
 
 all: LU.exe
 
