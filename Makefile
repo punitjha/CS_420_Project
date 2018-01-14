@@ -40,7 +40,7 @@ cc_NOPAPI_CC=$(CC) -DNOPAPI $(cc_PROG_ARGS)
 
 cc_PAPI_CC=$(CC) -I $(GSL_INCLUDE_PATH) -L $(GSL_LIBRARY_PATH) $(cc_PROG_ARGS)
 LIBS=-lgsl -lpapi -lgslcblas -lm 
-OBJ = main.o hdf_output.o matrix.o math.o
+OBJ = main.o hdf_output.o matrix.o math.o omp_LU.o
 
 all: LU.exe
 
@@ -48,7 +48,7 @@ LU.exe: $(OBJ)
 	$(cc_PAPI_CC) -o LU.exe $^ $(LIBS) 
 
 %.o: %.cpp
-	$(cc_PAPI_CC) -c  $< $(LIBS) 
+	$(cc_PAPI_CC) -c $< $(LIBS) 
 
 clean:
 	rm -f *.out *.o *.optrpt *.exe

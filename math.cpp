@@ -21,6 +21,7 @@ void init_cond(double **mat1,double **mat2, double **mat3, int row, int col)
 	 //u=exp(-10.0*(pow(x,2.0) + pow(y,2.0)));
 }
 
+
 //works for square matrices only
 void mat_mul(double **A, double **B, double **C, int row, int col)
 { 
@@ -173,4 +174,33 @@ void flatten_gsl(double *mat, double *vect, int rows, int cols, int len)
 			k++;
 		}
 	}
+}
+void flatten(double **mat, double *vect, int rows, int cols, int len)
+{
+	int k=0;
+	for (int i=0; i<rows; i++)
+	{
+		for(int j=0; j<cols; j++)
+		{
+			vect[k]=mat[i][j];
+			k++;
+		}
+	}
+}
+
+double* mat_vect_mult(double **mat,double *vect, int size)
+{
+    int c[10],i,j;
+    double *ans;
+    array_create(ans, size); 
+    array_init(ans, size);	     
+
+    for(i=0; i<size; i++)
+      {
+	for(j=0; j<size; j++)
+	  {
+	    ans[i] = ans[i]+(mat[i][j] * vect[j]);
+	  }
+      }
+    return ans;
 }

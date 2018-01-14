@@ -19,6 +19,7 @@
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <hdf5.h>
+#include <ctime>
 //#include "matrix.cpp"
 //#include "math.cpp"
 //#include "hdf_output.cpp"
@@ -26,11 +27,14 @@
 #include <papi.h>
 #endif
 
+using namespace std;
+
 //*****************************************
 //h5 output Functions
 //*****************************************
 void output_h5(int nx, int ny, gsl_matrix* sol, double time);
 void init_h5(double *& lin_x, double *& lin_y, int nx, int ny);
+void output_mat_h5(int nx, int ny, double* sol, double time);
 
 //*****************************************
 //Matrix Creation and Initialization Function
@@ -43,7 +47,9 @@ void mat_print(double **mat, int rows, int cols);
 void array_print(double *array, int len);
 void print_gsl_mat(double *m, int rows, int cols);
 void copy_gsl_mat(double **cmat, double *gmat, int rows, int cols);
-
+void print_mat(double **m, int rows, int cols);
+void print_vect_in_mat(double *v, int rows, int cols);
+  
 //*************************************************************************
 //Mathematical functions
 //*************************************************************************
@@ -57,10 +63,15 @@ void array_add_subs(double *array, int len, double num);
 void diag(double **mat, double *array, int len, double factor, int diag);
 void transpose_sq(double **mmat2 ,double **mmat1, int rows, int cols);
 void flatten_gsl(double *mat, double *vect, int rows, int cols, int len);
+void flatten(double **mat, double *vect, int rows, int cols, int len);
+double* mat_vect_mult(double **mat,double *vect, int size);
 
 //******************************************************
 //The LU decomposition fucntions should be defined here
 //******************************************************
+void LU_OMP(double **mat, int size);
+double** omp_LU_decompose(double **mat, int nx, int ny);
+double* omp_LU_solve(double **mat, double *vec, int nx, int ny);
 
 
 //**************************************
@@ -210,9 +221,9 @@ int main (int argc, char** argv)
 	init_cond(x,y,u,nx,ny);
 
 	double cx=1.0; // flow speed in x
-	double cy=1.0; // flow speed in y
-	int nt=32; // no. of time steps 
-	double dt= T/nt; //the delta t -- time steps
+	double cy=1.0; // flow speed in y 
+	double dt= dx/2.0; //the delta t -- time steps
+	int nt= int(T/dt); // no. of time steps
 	double lmbda_x = cx*dt/dx; // courant number in x direction
 	double lmbda_y = cy*dt/dy; // courant number in y direction
 	int svl = nx*ny;// the sol vector length
@@ -249,8 +260,8 @@ int main (int argc, char** argv)
 	diag(m1,l_a1,nx*nx-1,1.0,1);		
 	diag(m1,l_a2,nx*nx-nx,-1.0,-nx);		
 	diag(m1,l_a2,nx*nx-nx,1.0,nx);	
-	diag(m1,I,nx*nx,1.0,0);	
-	
+	diag(m1,I,nx*nx,1.0,0);
+
 	//removing the diag lambdas where each row ends and starts
 	for(int i=0; i<x_len; i++)
 	{
@@ -283,7 +294,6 @@ int main (int argc, char** argv)
 	mat_create(m2,nx*ny,nx*ny);
 	mat_init(m2,nx*ny,nx*ny);
 	transpose_sq(m2,m1,nx*ny,nx*ny);
-
 	//mat_print(m2,nx*ny,nx*ny);	
 	
 //********************
@@ -311,53 +321,71 @@ int main (int argc, char** argv)
 //******************************************
 //we have to code our LU decomposition here*
 //******************************************
-
-	//Using the GNU standard library for solving the linear equation	
-	gsl_matrix *mm1=gsl_matrix_alloc(nx*ny,nx*ny);
-	gsl_matrix *mm2=gsl_matrix_alloc(nx*ny,nx*ny);
-	gsl_matrix *uu1=gsl_matrix_alloc(nx,ny);
+	clock_t begin = clock();
 	
-	copy_gsl_mat(m1,gsl_matrix_ptr(mm1,0,0),nx*ny,nx*ny);
-	copy_gsl_mat(u,gsl_matrix_ptr(uu1,0,0),nx,ny);
-	gsl_matrix_transpose_memcpy(mm2,mm1);
+	double **lu;
+	mat_create(lu,nx*ny,nx*ny);
+	mat_init(lu,nx*ny,nx*ny);
+	lu = omp_LU_decompose(m1,nx,ny);
+	//	print_mat(lu,nx*ny,nx*ny);
+	double *u_vector;
+	array_create(u_vector,nx*ny);
+	array_init(u_vector,nx*ny);
+	double *u_vector2;
+	array_create(u_vector2,nx*ny);
+	array_init(u_vector2,nx*ny);
+	flatten(u,u_vector,nx,ny,nx*ny);
 
-	gsl_vector *u_vec=gsl_vector_alloc(nx*ny);
+	// print initial condition
+	output_mat_h5(nx,ny,u_vector,dt*(double)(0.0));
 
-	//printf("\n Here1 \n");
-	output_h5(nx,ny,uu1,dt*(double)(0.0));
-
-	for(int i=0; i<10; i++)
-	{
-		//flatening starts here
-	        //printf("\n Here2 \n");
-		flatten_gsl(gsl_matrix_ptr(uu1,0,0),gsl_vector_ptr(u_vec,0),nx,ny,nx*ny);	
-		//the matrix vector multiplication implemtation.NOTICE NEW VEC USED
-		gsl_vector *u_vecc=gsl_vector_alloc (nx*ny);
-		flatten_gsl(gsl_matrix_ptr(uu1,0,0),gsl_vector_ptr(u_vecc,0),nx,ny,nx*ny);	
-		//printf("\n Here3 \n");
-		gsl_blas_dgemv(CblasNoTrans,1.0,mm2,u_vec,0.0,u_vecc);
-
-		//preparing for gsl LU  decompose
-		//printf("\n Here4 \n");
-		int s; // required signum
-		gsl_permutation *p=gsl_permutation_alloc(nx*ny);
-		//printf("\n Here5 \n");
-		gsl_linalg_LU_decomp (mm1,p,&s);
-		gsl_vector *sol=gsl_vector_alloc(nx*ny);
-		//printf("\n Here6 \n");
-		gsl_linalg_LU_solve (mm1,p,u_vecc,sol);
-		//printf("\n Here7 \n");
-		gsl_matrix_view sol1=gsl_matrix_view_vector(sol,nx,ny);
-		//printf("\n Here8 \n");
-		//		print_gsl_mat(gsl_matrix_ptr(&sol1.matrix,0,0),nx,ny);
-		//		printf(" \n \n \n");
-		//printf("\n Here9 \n");
-		gsl_matrix_memcpy(uu1,&sol1.matrix);
-		//printf("\n Here10 \n");
-		output_h5(nx,ny,uu1,dt*(double)(i+1));
+	for(int i=0; i<nt; i++)
+	{  
+	  u_vector2 = mat_vect_mult(m2,u_vector,nx*ny);
+	  u_vector = omp_LU_solve(lu,u_vector2,nx,ny);
+	  output_mat_h5(nx,ny,u_vector,dt*(double)(i+1));
+	  //print_vect_in_mat(u_vector,nx,ny);
 	}
-	print_gsl_mat(gsl_matrix_ptr(uu1,0,0),nx,ny);
 
+//******Using the GNU standard library for solving the linear equation	******
+//	gsl_matrix *mm1=gsl_matrix_alloc(nx*ny,nx*ny);
+//	gsl_matrix *mm2=gsl_matrix_alloc(nx*ny,nx*ny);
+//	gsl_matrix *uu1=gsl_matrix_alloc(nx,ny);
+//	
+//	copy_gsl_mat(m1,gsl_matrix_ptr(mm1,0,0),nx*ny,nx*ny);
+//	copy_gsl_mat(u,gsl_matrix_ptr(uu1,0,0),nx,ny);
+//	gsl_matrix_transpose_memcpy(mm2,mm1);
+//
+//	gsl_vector *u_vec=gsl_vector_alloc(nx*ny);
+//
+//	output_h5(nx,ny,uu1,dt*(double)(0.0));
+//
+//	int s; // required signum
+//	gsl_permutation *p=gsl_permutation_alloc(nx*ny);
+//	gsl_linalg_LU_decomp (mm1,p,&s);
+//	
+//	for(int i=0; i<nt; i++)
+//	{
+//		//flattening starts here
+//		flatten_gsl(gsl_matrix_ptr(uu1,0,0),gsl_vector_ptr(u_vec,0),nx,ny,nx*ny);	
+//		//the matrix vector multiplication implemtation.NOTICE NEW VEC USED
+//		gsl_vector *u_vecc=gsl_vector_alloc (nx*ny);
+//		flatten_gsl(gsl_matrix_ptr(uu1,0,0),gsl_vector_ptr(u_vecc,0),nx,ny,nx*ny);	
+//		gsl_blas_dgemv(CblasNoTrans,1.0,mm2,u_vec,0.0,u_vecc);
+//
+//		//preparing for gsl LU  decompose
+//		gsl_vector *sol=gsl_vector_alloc(nx*ny);
+//		gsl_linalg_LU_solve (mm1,p,u_vecc,sol);
+//		gsl_matrix_view sol1=gsl_matrix_view_vector(sol,nx,ny);
+//		gsl_matrix_memcpy(uu1,&sol1.matrix);
+//		output_h5(nx,ny,uu1,dt*(double)(i+1));
+//		//print_gsl_mat(gsl_matrix_ptr(uu1,0,0),nx,ny);
+//	}
+	
+	clock_t end = clock();
+	double compute_time = double(end - begin) / CLOCKS_PER_SEC;
+	std::cout << "Compute time: " << compute_time << " s" << std::endl;
+	
 //**************
 //PAPI
 //**************

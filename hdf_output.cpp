@@ -56,6 +56,54 @@ void output_h5(int nx, int ny, gsl_matrix* sol, double time) {
   status = H5Fclose(fid);
 }
 
+void output_mat_h5(int nx, int ny, double* sol, double time) {
+  hid_t fid, gid, dsetid, dspaid;
+  hsize_t dims[3];
+  herr_t status;
+  double ans[nx][ny][1];
+  const char* time_ptr;
+  const char* dset_ptr;
+
+  stringstream time_stream;
+  time_stream << scientific << setprecision(5) << time;
+  string time_string = time_stream.str();
+  string title = "Time:  ";
+  string unit = " s";
+  string group_name;
+  string dataset_name = "u";
+
+  group_name.append(title);
+  group_name.append(time_string);
+  group_name.append(unit);
+
+  time_ptr = group_name.c_str();
+  dset_ptr = dataset_name.c_str();
+
+  dims[0] = nx;
+  dims[1] = ny;
+  dims[2] = 1;
+
+  fid = H5Fopen(FILE, H5F_ACC_RDWR, H5P_DEFAULT);
+  gid = H5Gcreate(fid, time_ptr, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  
+  dspaid = H5Screate_simple(3, dims, NULL);  
+  dsetid = H5Dcreate(gid, dset_ptr, H5T_NATIVE_DOUBLE, dspaid, \
+		       H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+  for (int i = 0; i < nx; i++) {
+    for (int j = 0; j < ny; j++) {
+      ans[i][j][0] = sol[i*ny+j];
+    }
+  }
+  status = H5Dwrite(dsetid, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, \
+		    H5P_DEFAULT, ans);
+  status = H5Dclose(dsetid);
+  status = H5Sclose(dspaid);
+  status = H5Gclose(gid);
+  status = H5Fclose(fid);
+}
+
+
 void init_h5(double *& x_lin, double *& y_lin, int nx, int ny) {
   hid_t fid, gid, dsetid_x, dsetid_y, dsetid_z, dspaceid_x, dspaceid_y, dspaceid_z;
   hsize_t x_dims[1], y_dims[1], z_dims[1];

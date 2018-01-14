@@ -65,6 +65,19 @@ void print_gsl_mat(double *m, int rows, int cols)
 		}
 	printf("\n");
 	}
+	printf("\n");
+}
+void print_mat(double **m, int rows, int cols)
+{
+	for (int i=0; i<rows; i++)
+	{
+		for(int j=0; j<cols; j++)
+		{
+			printf("%7.3f    ",m[i][j]);
+		}
+	printf("\n");
+	}
+	printf("\n");
 }
 void copy_gsl_mat(double **cmat, double *gmat, int rows, int cols)
 {
@@ -75,4 +88,16 @@ void copy_gsl_mat(double **cmat, double *gmat, int rows, int cols)
 			gmat[j+cols*i]=cmat[i][j];
 		}
 	}
+}
+void print_vect_in_mat(double *v, int rows, int cols)
+{
+	for (int i=0; i<rows; i++)
+	{
+		for(int j=0; j<cols; j++)
+		{
+			printf("%7.3f    ",v[j+cols*i]);
+		}
+	printf("\n");
+	}
+	printf("\n");
 }
