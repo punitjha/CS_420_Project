@@ -3,8 +3,8 @@ SHELL=/bin/bash
 #To use this makefile type make -f Makefile.win
 # Matrix dimensions.
 
-CC=h5c++
-# CC=CC
+# CC=h5c++
+CC=CC
 
 # Compiler optimization level.
 OPT_LEVEL=-O3

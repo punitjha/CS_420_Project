@@ -12,8 +12,8 @@
 #include <math.h>
 #include <complex>
 #include <omp.h>
-#include <mpich/mpi.h>
-//#include <mpi.h>
+//#include <mpich/mpi.h>
+#include <mpi.h>
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
