@@ -1,0 +1,17 @@
+#!/bin/bash
+#PBS -l walltime=00:15:00
+#PBS -l nodes=1:ppn=16
+#PBS -N mp1
+#PBS -o out-$PBS_JOBID.txt
+#PBS -e err-$PBS_JOBID.txt
+
+cd ${PBS_O_WORKDIR}
+
+module load papi
+export OMP_NUM_THREADS=8
+for size in 100 500 1000 2000
+do
+		echo "N=${size}, M=${size}, threads=${OMP_NUM_THREADS}"
+		aprun -n 1 -d $OMP_NUM_THREADS ./OMP_Block.exe  $size $size $size
+done
+
