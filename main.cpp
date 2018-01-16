@@ -72,6 +72,8 @@ double* mat_vect_mult(double **mat,double *vect, int size);
 void LU_OMP(double **mat, int size);
 double** omp_LU_decompose(double **mat, int nx, int ny);
 double* omp_LU_solve(double **mat, double *vec, int nx, int ny);
+double** LU_decompose(double **mat, int nx, int ny);
+double* LU_solve(double **mat, double *vec, int nx, int ny);
 
 
 //**************************************
@@ -326,8 +328,9 @@ int main (int argc, char** argv)
 	double **lu;
 	mat_create(lu,nx*ny,nx*ny);
 	mat_init(lu,nx*ny,nx*ny);
-	lu = omp_LU_decompose(m1,nx,ny);
-	//	print_mat(lu,nx*ny,nx*ny);
+	//lu = omp_LU_decompose(m1,nx,ny);
+	lu = LU_decompose(m1,nx,ny);
+	//mat_print(lu,nx*ny,nx*ny);
 	double *u_vector;
 	array_create(u_vector,nx*ny);
 	array_init(u_vector,nx*ny);
@@ -335,16 +338,17 @@ int main (int argc, char** argv)
 	array_create(u_vector2,nx*ny);
 	array_init(u_vector2,nx*ny);
 	flatten(u,u_vector,nx,ny,nx*ny);
-
+	
 	// print initial condition
-	output_mat_h5(nx,ny,u_vector,dt*(double)(0.0));
+	//output_mat_h5(nx,ny,u_vector,dt*(double)(0.0));
 
 	for(int i=0; i<nt; i++)
-	{  
+	{
 	  u_vector2 = mat_vect_mult(m2,u_vector,nx*ny);
-	  u_vector = omp_LU_solve(lu,u_vector2,nx,ny);
-	  output_mat_h5(nx,ny,u_vector,dt*(double)(i+1));
-	  //print_vect_in_mat(u_vector,nx,ny);
+	  //u_vector = omp_LU_solve(lu,u_vector2,nx,ny);
+	  u_vector = LU_solve(lu,u_vector2,nx,ny);
+	  //output_mat_h5(nx,ny,u_vector,dt*(double)(i+1));
+	  print_vect_in_mat(u_vector,nx,ny);
 	}
 
 //******Using the GNU standard library for solving the linear equation	******
