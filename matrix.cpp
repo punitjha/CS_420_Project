@@ -54,6 +54,7 @@ void array_print(double *array, int len)
 	{
 		printf("%2.3f   ", array[i]);
 	}
+	printf("\n\n");
 }
 void print_gsl_mat(double *m, int rows, int cols)
 {

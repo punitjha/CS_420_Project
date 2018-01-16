@@ -16,22 +16,27 @@ void output_h5(int nx, int ny, gsl_matrix* sol, double time) {
   double ans[nx][ny][1];
   const char* time_ptr;
   const char* dset_ptr;
-
+  //printf("hello-1\n");
   stringstream time_stream;
   time_stream << scientific << setprecision(5) << time;
+  //printf("hello0\n");
   string time_string = time_stream.str();
+  //printf("hello1\n");
   string title = "Time:  ";
-  string unit = " s";
-  string group_name;
-  string dataset_name = "u";
-
+  //printf("hello2\n");
+  string time_unit = " s";
+  //printf("hello3\n");
+  string group_name = "";
+  //printf("hello4\n");
+  string dataset_name = "solution";
+  //printf("hello5\n");
   group_name.append(title);
   group_name.append(time_string);
-  group_name.append(unit);
+  group_name.append(time_unit);
 
   time_ptr = group_name.c_str();
   dset_ptr = dataset_name.c_str();
-
+    
   dims[0] = nx;
   dims[1] = ny;
   dims[2] = 1;
@@ -48,6 +53,7 @@ void output_h5(int nx, int ny, gsl_matrix* sol, double time) {
       ans[i][j][0] = gsl_matrix_get(sol,i,j);
     }
   }
+
   status = H5Dwrite(dsetid, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, \
 		    H5P_DEFAULT, ans);
   status = H5Dclose(dsetid);
