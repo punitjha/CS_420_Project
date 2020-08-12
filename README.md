@@ -1,4 +1,4 @@
-Final CS-420 Project: Design and Implementations of Parallel OpenMP andMPI LU factorization : Application to FiniteDifference Method
+Final CS-420 Project: Design and Implementations of Parallel OpenMP andMPI LU factorization : Application to Finite-Difference Method
 
 module load papi
 
